@@ -1,6 +1,6 @@
 # alto2tei_segmonto
 
-Outil de conversion **ALTO → TEI**, avec une étape complémentaire de transformation **TEI → HTML** pour obtenir une visualisation simple et élégante du texte.
+Outil de conversion **ALTO → TEI**, avec une étape complémentaire de transformation **TEI → HTML** pour obtenir une visualisation simple du texte. Les fichiers ALTO sont censés être encodés en fonction des <a href="https://segmonto.github.io/">guidelines SegmOnto</a>.
 
 ## 1. Objectif
 
