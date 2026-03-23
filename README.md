@@ -16,7 +16,7 @@ Ce dépôt permet :
 - `xsl/replacens.xsl` : correction éventuelle de namespace ALTO
 - `xsl/tei2html_robust.xsl` : transformation XSLT TEI → HTML
 - `css/style.css` : feuille de style complémentaire
-- `scripts/run_tei2html_v3.sh` : script de lancement pour la transformation TEI → HTML
+- `scripts/run_tei2html.sh` : script de lancement pour la transformation TEI → HTML
 
 ## 3. Conversion ALTO → TEI
 
