@@ -9,6 +9,6 @@ import setuptools
 
 setuptools.setup(
     name="alto2tei",
-    install_requires=["lxml", "regex", "urllib3"],
+    install_requires=["lxml"],
     entry_points={"console_scripts": ["alto2tei = alto2tei:main"]},
 )
