@@ -49,6 +49,6 @@ La transformation TEI → HTML produit :
 * un traitement visuel spécifique pour certaines structures, par exemple :
 ```xml
 <div type="titlePage">
-  <p>CAVARL<lb/>COMEDIE.<lb/></p>
+  <p>L'Avare<lb/>COMEDIE.<lb/></p>
 </div>
 ```
