@@ -72,26 +72,38 @@
     <xsl:choose>
       <xsl:when test="$type = 'RunningTitle'">
         <tei:fw type="head">
-          <xsl:apply-templates select="alto:TextLine"/>
+          <xsl:apply-templates select="alto:TextLine">
+            <xsl:sort select="@VPOS" data-type="number"/>
+            <xsl:sort select="@HPOS" data-type="number"/>
+          </xsl:apply-templates>
         </tei:fw>
       </xsl:when>
       
       <xsl:when test="$type = 'Numbering'">
         <tei:fw type="pageNum">
-          <xsl:apply-templates select="alto:TextLine"/>
+          <xsl:apply-templates select="alto:TextLine">
+            <xsl:sort select="@VPOS" data-type="number"/>
+            <xsl:sort select="@HPOS" data-type="number"/>
+          </xsl:apply-templates>
         </tei:fw>
       </xsl:when>
       
       <xsl:when test="$type = 'MarginText'">
         <tei:note place="margin">
-          <xsl:apply-templates select="alto:TextLine"/>
+          <xsl:apply-templates select="alto:TextLine">
+            <xsl:sort select="@VPOS" data-type="number"/>
+            <xsl:sort select="@HPOS" data-type="number"/>
+          </xsl:apply-templates>
         </tei:note>
       </xsl:when>
       
       <xsl:when test="$type = 'TitlePage'">
         <tei:div type="titlePage">
           <tei:p>
-            <xsl:apply-templates select="alto:TextLine"/>
+            <xsl:apply-templates select="alto:TextLine">
+              <xsl:sort select="@VPOS" data-type="number"/>
+              <xsl:sort select="@HPOS" data-type="number"/>
+            </xsl:apply-templates>
           </tei:p>
         </tei:div>
       </xsl:when>
@@ -102,7 +114,10 @@
       
       <xsl:when test="$type = 'QuireMarks'">
         <tei:fw type="quire">
-          <xsl:apply-templates select="alto:TextLine"/>
+          <xsl:apply-templates select="alto:TextLine">
+            <xsl:sort select="@VPOS" data-type="number"/>
+            <xsl:sort select="@HPOS" data-type="number"/>
+          </xsl:apply-templates>
         </tei:fw>
       </xsl:when>
       
@@ -112,7 +127,10 @@
             <xsl:value-of select="$type"/>
           </xsl:attribute>
           <tei:p>
-            <xsl:apply-templates select="alto:TextLine"/>
+            <xsl:apply-templates select="alto:TextLine">
+              <xsl:sort select="@VPOS" data-type="number"/>
+              <xsl:sort select="@HPOS" data-type="number"/>
+            </xsl:apply-templates>
           </tei:p>
         </tei:div>
       </xsl:when>
@@ -125,7 +143,10 @@
             </xsl:attribute>
           </xsl:if>
           <tei:p>
-            <xsl:apply-templates select="alto:TextLine"/>
+            <xsl:apply-templates select="alto:TextLine">
+              <xsl:sort select="@VPOS" data-type="number"/>
+              <xsl:sort select="@HPOS" data-type="number"/>
+            </xsl:apply-templates>
           </tei:p>
         </tei:div>
       </xsl:otherwise>
@@ -139,6 +160,12 @@
       </xsl:call-template>
     </xsl:variable>
     
+    <xsl:variable name="last_string" select="alto:String[last()]"/>
+    <xsl:variable name="last_content" select="$last_string/@CONTENT"/>
+    <xsl:variable name="joins_next"
+      select="string-length($last_content) &gt; 0
+      and substring($last_content, string-length($last_content), 1) = '¬'"/>
+    
     <xsl:choose>
       <xsl:when test="$line_type = 'Heading'">
         <tei:head>
@@ -147,27 +174,44 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:apply-templates/>
-        <tei:lb/>
+        <xsl:if test="not($joins_next)">
+          <tei:lb/>
+        </xsl:if>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
   
   <xsl:template match="alto:String">
     <xsl:variable name="style" select="key('style-by-id', @STYLEREFS)"/>
+    <xsl:variable name="content" select="@CONTENT"/>
+    <xsl:variable name="is_line_final_string" select="position() = last()"/>
+    
+    <xsl:variable name="clean_content">
+      <xsl:choose>
+        <xsl:when test="$is_line_final_string
+          and string-length($content) &gt; 0
+          and substring($content, string-length($content), 1) = '¬'">
+          <xsl:value-of select="substring($content, 1, string-length($content) - 1)"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$content"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     
     <xsl:choose>
       <xsl:when test="$style/@FONTSTYLE = 'italic'">
         <tei:hi rend="italic">
-          <xsl:value-of select="@CONTENT"/>
+          <xsl:value-of select="$clean_content"/>
         </tei:hi>
       </xsl:when>
       <xsl:when test="$style/@FONTSTYLE = 'bold'">
         <tei:hi rend="bold">
-          <xsl:value-of select="@CONTENT"/>
+          <xsl:value-of select="$clean_content"/>
         </tei:hi>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="@CONTENT"/>
+        <xsl:value-of select="$clean_content"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
