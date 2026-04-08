@@ -7,13 +7,14 @@
   <xsl:output method="html" encoding="UTF-8" indent="yes"/>
 
   <!--
-    Version robuste enrichie :
-    - CSS embarqué dans le HTML
-    - gestion des TEI avec namespace ET sans namespace
-    - traitement visible de div[@type='titlePage']
-    - table des matières latérale hiérarchique
-    - ancres sur les divisions
-    - affichage théâtral des speaker en petites capitales
+    tei2html_robust.xsl
+
+    Objectifs :
+    - produire un HTML autonome avec CSS embarqué ;
+    - fonctionner avec TEI namespace et sans namespace ;
+    - offrir un affichage lisible pour prose, théâtre et vers ;
+    - générer une table des matières latérale ;
+    - gérer les divisions, speakers, vers, listes, notes, etc.
   -->
 
   <xsl:template match="/">
@@ -216,6 +217,20 @@
             margin-top: 0.15rem;
           }
 
+          .stage {
+            font-style: italic;
+            margin: 0.4rem 0 0.8rem 0;
+          }
+
+          .lg {
+            margin: 0 0 1em 0;
+          }
+
+          .l {
+            margin: 0;
+            text-align: left;
+          }
+
           .add {
             color: #0b6e4f;
             font-weight: 500;
@@ -230,11 +245,15 @@
             font-style: italic;
           }
 
-          ul {
+          .choice {
+            display: inline;
+          }
+
+          .tei-text ul {
             margin: 0.5rem 0 1rem 1.4rem;
           }
 
-          li {
+          .tei-text li {
             margin-bottom: 0.4rem;
           }
 
@@ -265,6 +284,7 @@
           }
         </style>
       </head>
+
       <body>
         <main class="page-shell">
           <div class="page-card with-sidebar">
@@ -272,7 +292,7 @@
               <h2>Sommaire</h2>
               <ul>
                 <xsl:apply-templates
-                  select="//*[local-name()='text']/*[local-name()='body']/*[local-name()='div']"
+                  select="//*[local-name()='text']/*[local-name()='body']/*[local-name()='div'][not(@type='titlePage')]"
                   mode="toc"/>
               </ul>
             </aside>
@@ -347,9 +367,11 @@
         </xsl:choose>
       </a>
 
-      <xsl:if test="*[local-name()='div']">
+      <xsl:if test="*[local-name()='div'][not(@type='titlePage')]">
         <ul>
-          <xsl:apply-templates select="*[local-name()='div']" mode="toc"/>
+          <xsl:apply-templates
+            select="*[local-name()='div'][not(@type='titlePage')]"
+            mode="toc"/>
         </ul>
       </xsl:if>
     </li>
@@ -368,7 +390,9 @@
   </xsl:template>
 
   <xsl:template match="tei:div[@type='titlePage']/tei:p | *[local-name()='div' and @type='titlePage']/*[local-name()='p']">
-    <p class="title-page-text"><xsl:apply-templates/></p>
+    <p class="title-page-text">
+      <xsl:apply-templates/>
+    </p>
   </xsl:template>
 
   <xsl:template match="tei:sp | *[local-name()='sp']">
@@ -383,12 +407,34 @@
     </div>
   </xsl:template>
 
+  <xsl:template match="tei:stage | *[local-name()='stage']">
+    <div class="stage">
+      <xsl:apply-templates/>
+    </div>
+  </xsl:template>
+
+  <xsl:template match="tei:lg | *[local-name()='lg']">
+    <div class="lg">
+      <xsl:apply-templates/>
+    </div>
+  </xsl:template>
+
+  <xsl:template match="tei:l | *[local-name()='l']">
+    <div class="l">
+      <xsl:apply-templates/>
+    </div>
+  </xsl:template>
+
   <xsl:template match="tei:p | *[local-name()='p']">
-    <p><xsl:apply-templates/></p>
+    <p>
+      <xsl:apply-templates/>
+    </p>
   </xsl:template>
 
   <xsl:template match="tei:ab | *[local-name()='ab']">
-    <p class="ab"><xsl:apply-templates/></p>
+    <p class="ab">
+      <xsl:apply-templates/>
+    </p>
   </xsl:template>
 
   <xsl:template match="tei:lb | *[local-name()='lb']">
@@ -407,31 +453,45 @@
   </xsl:template>
 
   <xsl:template match="tei:hi | *[local-name()='hi']">
-    <span class="hi"><xsl:apply-templates/></span>
+    <span class="hi">
+      <xsl:apply-templates/>
+    </span>
   </xsl:template>
 
   <xsl:template match="tei:add | *[local-name()='add']">
-    <span class="add" title="Ajout"><xsl:apply-templates/></span>
+    <span class="add" title="Ajout">
+      <xsl:apply-templates/>
+    </span>
   </xsl:template>
 
   <xsl:template match="tei:del | *[local-name()='del']">
-    <span class="del" title="Suppression"><xsl:apply-templates/></span>
+    <span class="del" title="Suppression">
+      <xsl:apply-templates/>
+    </span>
   </xsl:template>
 
   <xsl:template match="tei:note | *[local-name()='note']">
-    <aside class="note"><xsl:apply-templates/></aside>
+    <aside class="note">
+      <xsl:apply-templates/>
+    </aside>
   </xsl:template>
 
   <xsl:template match="tei:list | *[local-name()='list']">
-    <ul><xsl:apply-templates/></ul>
+    <ul>
+      <xsl:apply-templates/>
+    </ul>
   </xsl:template>
 
   <xsl:template match="tei:item | *[local-name()='item']">
-    <li><xsl:apply-templates/></li>
+    <li>
+      <xsl:apply-templates/>
+    </li>
   </xsl:template>
 
   <xsl:template match="tei:choice | *[local-name()='choice']">
-    <span class="choice"><xsl:apply-templates/></span>
+    <span class="choice">
+      <xsl:apply-templates/>
+    </span>
   </xsl:template>
 
   <xsl:template match="tei:teiHeader | *[local-name()='teiHeader']"/>
