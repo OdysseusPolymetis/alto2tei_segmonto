@@ -7,10 +7,13 @@
   <xsl:output method="html" encoding="UTF-8" indent="yes"/>
 
   <!--
-    Version robuste :
-    - CSS embarqué dans le HTML (pas de problème de chemin)
+    Version robuste enrichie :
+    - CSS embarqué dans le HTML
     - gestion des TEI avec namespace ET sans namespace
     - traitement visible de div[@type='titlePage']
+    - table des matières latérale hiérarchique
+    - ancres sur les divisions
+    - affichage théâtral des speaker en petites capitales
   -->
 
   <xsl:template match="/">
@@ -32,6 +35,10 @@
             padding: 0;
           }
 
+          html {
+            scroll-behavior: smooth;
+          }
+
           body {
             font-family: Georgia, "Times New Roman", serif;
             background: #efe8da;
@@ -44,12 +51,67 @@
           }
 
           .page-card {
-            max-width: 980px;
+            max-width: 1200px;
             margin: 0 auto;
             background: #fffdf8;
             box-shadow: 0 12px 36px rgba(74, 58, 37, 0.10);
             border: 1px solid #ddd2bd;
-            padding: 2.5rem 4.5rem 4rem 5.5rem;
+          }
+
+          .with-sidebar {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 2.5rem;
+            padding: 2.5rem 3rem 4rem 3rem;
+          }
+
+          .toc {
+            position: sticky;
+            top: 1rem;
+            align-self: start;
+            max-height: calc(100vh - 2rem);
+            overflow: auto;
+            padding-right: 1rem;
+            border-right: 1px solid #d8cdb9;
+          }
+
+          .toc h2 {
+            margin: 0 0 1rem 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #314554;
+          }
+
+          .toc ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+          }
+
+          .toc ul ul {
+            margin-top: 0.35rem;
+            margin-left: 0.85rem;
+            padding-left: 0.85rem;
+            border-left: 1px solid #e0d5c2;
+          }
+
+          .toc li {
+            margin: 0.35rem 0;
+          }
+
+          .toc a {
+            text-decoration: none;
+            color: #314554;
+          }
+
+          .toc a:hover {
+            text-decoration: underline;
+          }
+
+          .main-column {
+            min-width: 0;
           }
 
           .document-header {
@@ -83,6 +145,7 @@
 
           .div {
             margin-bottom: 1.3rem;
+            scroll-margin-top: 1rem;
           }
 
           h2 {
@@ -91,6 +154,10 @@
             margin-top: 2.2rem;
             margin-bottom: 1rem;
             color: #314554;
+          }
+
+          .div-head {
+            scroll-margin-top: 1rem;
           }
 
           .pb {
@@ -129,6 +196,26 @@
             color: #4e473f;
           }
 
+          .sp {
+            margin-bottom: 0.7rem;
+          }
+
+          .speaker {
+            display: block;
+            margin: 1.2em 0 0.2em 0;
+            font-variant: small-caps;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            text-align: left;
+          }
+
+          .sp .speaker + p,
+          .sp .speaker + .ab,
+          .sp .speaker + div,
+          .sp .speaker + section {
+            margin-top: 0.15rem;
+          }
+
           .add {
             color: #0b6e4f;
             font-weight: 500;
@@ -152,8 +239,19 @@
           }
 
           @media (max-width: 900px) {
-            .page-card {
+            .with-sidebar {
+              grid-template-columns: 1fr;
               padding: 1.5rem 1.5rem 2.5rem 1.8rem;
+            }
+
+            .toc {
+              position: static;
+              max-height: none;
+              border-right: none;
+              border-bottom: 1px solid #d8cdb9;
+              padding-right: 0;
+              padding-bottom: 1rem;
+              margin-bottom: 1.5rem;
             }
 
             .title-page {
@@ -169,26 +267,37 @@
       </head>
       <body>
         <main class="page-shell">
-          <div class="page-card">
-            <header class="document-header">
-              <h1>
-                <xsl:choose>
-                  <xsl:when test="//*[local-name()='titleStmt']/*[local-name()='title']">
-                    <xsl:value-of select="normalize-space((//*[local-name()='titleStmt']/*[local-name()='title'])[1])"/>
-                  </xsl:when>
-                  <xsl:otherwise>Document TEI</xsl:otherwise>
-                </xsl:choose>
-              </h1>
-              <xsl:if test="//*[local-name()='sourceDesc']/*[local-name()='p']">
-                <p class="source">
-                  <xsl:value-of select="normalize-space((//*[local-name()='sourceDesc']/*[local-name()='p'])[1])"/>
-                </p>
-              </xsl:if>
-            </header>
+          <div class="page-card with-sidebar">
+            <aside class="toc">
+              <h2>Sommaire</h2>
+              <ul>
+                <xsl:apply-templates
+                  select="//*[local-name()='text']/*[local-name()='body']/*[local-name()='div']"
+                  mode="toc"/>
+              </ul>
+            </aside>
 
-            <article class="tei-text">
-              <xsl:apply-templates select="//*[local-name()='text']/*[local-name()='body']"/>
-            </article>
+            <div class="main-column">
+              <header class="document-header">
+                <h1>
+                  <xsl:choose>
+                    <xsl:when test="//*[local-name()='titleStmt']/*[local-name()='title']">
+                      <xsl:value-of select="normalize-space((//*[local-name()='titleStmt']/*[local-name()='title'])[1])"/>
+                    </xsl:when>
+                    <xsl:otherwise>Document TEI</xsl:otherwise>
+                  </xsl:choose>
+                </h1>
+                <xsl:if test="//*[local-name()='sourceDesc']/*[local-name()='p']">
+                  <p class="source">
+                    <xsl:value-of select="normalize-space((//*[local-name()='sourceDesc']/*[local-name()='p'])[1])"/>
+                  </p>
+                </xsl:if>
+              </header>
+
+              <article class="tei-text">
+                <xsl:apply-templates select="//*[local-name()='text']/*[local-name()='body']"/>
+              </article>
+            </div>
           </div>
         </main>
       </body>
@@ -201,25 +310,77 @@
 
   <xsl:template match="tei:div[@type='titlePage'] | *[local-name()='div' and @type='titlePage']">
     <section class="title-page">
+      <xsl:attribute name="id">
+        <xsl:text>div-</xsl:text>
+        <xsl:value-of select="generate-id()"/>
+      </xsl:attribute>
       <xsl:apply-templates/>
     </section>
   </xsl:template>
 
   <xsl:template match="tei:div | *[local-name()='div']">
     <section class="div">
+      <xsl:attribute name="id">
+        <xsl:text>div-</xsl:text>
+        <xsl:value-of select="generate-id()"/>
+      </xsl:attribute>
       <xsl:if test="@type">
-        <xsl:attribute name="data-type"><xsl:value-of select="@type"/></xsl:attribute>
+        <xsl:attribute name="data-type">
+          <xsl:value-of select="@type"/>
+        </xsl:attribute>
       </xsl:if>
       <xsl:apply-templates/>
     </section>
   </xsl:template>
 
+  <xsl:template match="tei:div | *[local-name()='div']" mode="toc">
+    <li>
+      <a href="#div-{generate-id()}">
+        <xsl:choose>
+          <xsl:when test="*[local-name()='head']">
+            <xsl:value-of select="normalize-space(*[local-name()='head'][1])"/>
+          </xsl:when>
+          <xsl:when test="@type">
+            <xsl:value-of select="@type"/>
+          </xsl:when>
+          <xsl:otherwise>Section</xsl:otherwise>
+        </xsl:choose>
+      </a>
+
+      <xsl:if test="*[local-name()='div']">
+        <ul>
+          <xsl:apply-templates select="*[local-name()='div']" mode="toc"/>
+        </ul>
+      </xsl:if>
+    </li>
+  </xsl:template>
+
   <xsl:template match="tei:head | *[local-name()='head']">
-    <h2><xsl:apply-templates/></h2>
+    <h2 class="div-head">
+      <xsl:if test="parent::*[local-name()='div']">
+        <xsl:attribute name="id">
+          <xsl:text>head-</xsl:text>
+          <xsl:value-of select="generate-id(parent::*)"/>
+        </xsl:attribute>
+      </xsl:if>
+      <xsl:apply-templates/>
+    </h2>
   </xsl:template>
 
   <xsl:template match="tei:div[@type='titlePage']/tei:p | *[local-name()='div' and @type='titlePage']/*[local-name()='p']">
     <p class="title-page-text"><xsl:apply-templates/></p>
+  </xsl:template>
+
+  <xsl:template match="tei:sp | *[local-name()='sp']">
+    <div class="sp">
+      <xsl:apply-templates/>
+    </div>
+  </xsl:template>
+
+  <xsl:template match="tei:speaker | *[local-name()='speaker']">
+    <div class="speaker">
+      <xsl:apply-templates/>
+    </div>
   </xsl:template>
 
   <xsl:template match="tei:p | *[local-name()='p']">
